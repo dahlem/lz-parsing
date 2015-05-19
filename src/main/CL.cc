@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Dominik Dahlem <Dominik.Dahlem@gmail.com>
+// COPYRight (C) 2013, 2015 Dominik Dahlem <Dominik.Dahlem@gmail.com>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,75 +48,90 @@ namespace main
 CL::CL()
     : m_opt_desc(new po::options_description("Options"))
 {
-    // Declare the supported options.
-    po::options_description opt_general("General Configuration");
-    opt_general.add_options()
-        (HELP.c_str(), "produce help message")
-        (VERS.c_str(), "show the version")
-        ;
+  // Declare the supported options.
+  po::options_description opt_general("General Configuration");
+  opt_general.add_options()
+      (HELP.c_str(), "produce help message")
+      (VERS.c_str(), "show the version")
+      ;
 
-    po::options_description opt_io("I/O Configuration");
-    opt_io.add_options()
-        (RESULTS_DIR.c_str(), po::value <std::string>()->default_value("./results"), "results directory.")
-        (SEQUENCE.c_str(), po::value <std::string>()->default_value(""), "sequence file.")
-        (MIN.c_str(), po::value <boost::uint16_t>()->default_value(1), "minimum elements to be considered in the sequence for parsing.")
-        ;
+  po::options_description opt_io("I/O Configuration");
+  opt_io.add_options()
+      (RESULTS_DIR.c_str(), po::value <std::string>()->default_value("./results"), "results directory.")
+      (SEQUENCE.c_str(), po::value <std::string>()->default_value(""), "sequence file.")
+      (MIN.c_str(), po::value <boost::uint16_t>()->default_value(1), "minimum elements to be considered in the sequence for parsing.")
+      ;
 
-    po::options_description opt_lz("LZ Configuration");
-    opt_lz.add_options()
-        (TWOPASS_PARSE.c_str(), po::value <bool>()->default_value(0), "parse the sequence twice with offset of 1")
-        (TWOPASS_ENCODE.c_str(), po::value <bool>()->default_value(0), "encode the sequence twice with offset of 1")
-        ;
+  po::options_description opt_lz("LZ Configuration");
+  opt_lz.add_options()
+      (INPUT_SHIFTING.c_str(), po::value <boost::uint16_t>()->default_value(0), "Maximum offset for input shifting.")
+      (BACK_SHIFTING.c_str(), po::value <boost::uint16_t>()->default_value(0), "Maximum offset for back shifting.")
+      (TWOPASS_ENCODE.c_str(), po::value <bool>()->default_value(0), "encode the sequence twice with offset of 1.")
+      (PRUNE.c_str(), po::value <bool>()->default_value(0), "Prune the dictionary.")
+      (ENCODE.c_str(), po::value <bool>()->default_value(0), "Encode the sequences.")
+      ;
 
-    m_opt_desc->add(opt_general);
-    m_opt_desc->add(opt_io);
-    m_opt_desc->add(opt_lz);
+  m_opt_desc->add(opt_general);
+  m_opt_desc->add(opt_io);
+  m_opt_desc->add(opt_lz);
 }
 
 
 int CL::parse(int argc, char *argv[], args_t &p_args)
 {
-    po::variables_map vm;
+  po::variables_map vm;
 
-    po::store(po::parse_command_line(argc, argv, (*m_opt_desc.get())), vm);
-    po::notify(vm);
+  po::store(po::parse_command_line(argc, argv, (*m_opt_desc.get())), vm);
+  po::notify(vm);
 
-    if (vm.count(HELP)) {
-        std::cout << (*m_opt_desc.get()) << std::endl;
-        return EXIT_FAILURE;
-    }
+  if (vm.count(HELP)) {
+    std::cout << (*m_opt_desc.get()) << std::endl;
+    return EXIT_FAILURE;
+  }
 
-    if (vm.count(VERS)) {
-        std::cout << PACKAGE_NAME << " " << PACKAGE_VERSION << std::endl;
-        std::cout << argv[0] << std::endl;
-        return EXIT_FAILURE;
-    }
+  if (vm.count(VERS)) {
+    std::cout << PACKAGE_NAME << " " << PACKAGE_VERSION << std::endl;
+    std::cout << argv[0] << std::endl;
+    return EXIT_FAILURE;
+  }
 
-    if (vm.count(SEQUENCE.c_str())) {
-        p_args.sequence = vm[SEQUENCE.c_str()].as <std::string>();
-    }
+  if (vm.count(SEQUENCE.c_str())) {
+    p_args.sequence = vm[SEQUENCE.c_str()].as <std::string>();
+  }
 
-    if (vm.count(RESULTS_DIR.c_str())) {
-        p_args.results_dir = vm[RESULTS_DIR.c_str()].as <std::string>();
-    }
+  if (vm.count(RESULTS_DIR.c_str())) {
+    p_args.results_dir = vm[RESULTS_DIR.c_str()].as <std::string>();
+  }
 
-    if (vm.count(MIN.c_str())) {
-        p_args.min = vm[MIN.c_str()].as <boost::uint16_t>();
-    }
+  if (vm.count(MIN.c_str())) {
+    p_args.min = vm[MIN.c_str()].as <boost::uint16_t>();
+  }
 
-    if (vm.count(TWOPASS_PARSE.c_str())) {
-        p_args.twopass_parse = vm[TWOPASS_PARSE.c_str()].as <bool>();
-    }
+  if (vm.count(INPUT_SHIFTING.c_str())) {
+    p_args.input_shifting = vm[INPUT_SHIFTING.c_str()].as <boost::uint16_t>();
+  }
 
-    if (vm.count(TWOPASS_ENCODE.c_str())) {
-        p_args.twopass_encode = vm[TWOPASS_ENCODE.c_str()].as <bool>();
-    }
+  if (vm.count(BACK_SHIFTING.c_str())) {
+    p_args.back_shifting = vm[BACK_SHIFTING.c_str()].as <boost::uint16_t>();
+  }
 
-    std::cout << argv[0] << " " << PACKAGE_VERSION << std::endl;
-    std::cout << PACKAGE_NAME << std::endl;
-    std::cout << p_args << std::endl;
+  if (vm.count(TWOPASS_ENCODE.c_str())) {
+    p_args.twopass_encode = vm[TWOPASS_ENCODE.c_str()].as <bool>();
+  }
 
-    return EXIT_SUCCESS;
+  if (vm.count(PRUNE.c_str())) {
+    p_args.prune = vm[PRUNE.c_str()].as <bool>();
+  }
+
+  if (vm.count(ENCODE.c_str())) {
+    p_args.encode = vm[ENCODE.c_str()].as <bool>();
+  }
+
+  std::cout << argv[0] << " " << PACKAGE_VERSION << std::endl;
+  std::cout << PACKAGE_NAME << std::endl;
+  std::cout << p_args << std::endl;
+
+  return EXIT_SUCCESS;
 }
 
 

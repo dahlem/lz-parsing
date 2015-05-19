@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Dominik Dahlem <Dominik.Dahlem@gmail.com>
+// Copyright (C) 2013, 2015 Dominik Dahlem <Dominik.Dahlem@gmail.com>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,41 +48,52 @@ const std::string VERS = "version";
 const std::string SEQUENCE = "sequence";
 const std::string RESULTS_DIR = "result";
 const std::string MIN = "min";
-const std::string TWOPASS_PARSE = "twopass-parse";
+
+const std::string INPUT_SHIFTING = "input-shifting";
+const std::string BACK_SHIFTING = "back-shifting";
 const std::string TWOPASS_ENCODE = "twopass-encode";
+const std::string PRUNE = "prune";
+const std::string ENCODE = "encode";
 
 
 /** @struct
  * structure specifying the command line variables.
  */
 struct args_t {
-    std::string sequence;              /* input matrix in CSV */
-    std::string results_dir;        /* directory name for the results */
-    boost::uint16_t min;
-    bool twopass_parse;
-    bool twopass_encode;
+  std::string sequence;              /* input matrix in CSV */
+  std::string results_dir;        /* directory name for the results */
+  boost::uint16_t min;
+  boost::uint16_t input_shifting;
+  boost::uint16_t back_shifting;
+  bool twopass_encode;
+  bool prune;
+  bool encode;
 
-    args_t(args_t const &args)
-        : sequence(args.sequence), results_dir(args.results_dir), min(args.min), twopass_parse(args.twopass_parse),
-          twopass_encode(args.twopass_encode)
-        {}
+  args_t(args_t const &args)
+      : sequence(args.sequence), results_dir(args.results_dir), min(args.min), input_shifting(args.input_shifting),
+        back_shifting(args.back_shifting), twopass_encode(args.twopass_encode), prune(args.prune),
+        encode(args.encode)
+  {}
 
-    args_t()
-        : sequence(""), results_dir(""), min(1), twopass_parse(0), twopass_encode(0)
-        {}
+  args_t()
+      : sequence(""), results_dir(""), min(1), input_shifting(0), back_shifting(0), twopass_encode(0), prune(0), encode(0)
+  {}
 
-    friend std::ostream& operator <<(std::ostream &p_os, const args_t &p_args)
-        {
-            p_os << "Parameters" << std::endl << std::endl;
-            p_os << "Sequence file:    " << p_args.sequence << std::endl
-                 << "Results directory:" << p_args.results_dir << std::endl
-                 << "Minimum elements: " << p_args.min << std::endl
-                 << "parse twice     : " << p_args.twopass_parse << std::endl
-                 << "encode twice    : " << p_args.twopass_encode << std::endl
-                 << std::endl;
+  friend std::ostream& operator <<(std::ostream &p_os, const args_t &p_args)
+  {
+    p_os << "Parameters" << std::endl << std::endl;
+    p_os << "Sequence file:    " << p_args.sequence << std::endl
+         << "Results directory:" << p_args.results_dir << std::endl
+         << "Minimum elements: " << p_args.min << std::endl
+         << "Input shifting:   " << p_args.input_shifting << std::endl
+         << "Back shifting:    " << p_args.back_shifting << std::endl
+         << "encode twice:     " << p_args.twopass_encode << std::endl
+         << "Prune:            " << p_args.prune << std::endl
+         << "Encode:           " << p_args.encode << std::endl
+         << std::endl;
 
-            return p_os;
-        }
+    return p_os;
+  }
 };
 
 
@@ -93,32 +104,32 @@ struct args_t {
  */
 class CL
 {
-public:
-    CL();
+ public:
+  CL();
 
-    /** @fn parse(int argc, char *argv[], args_t);
-     * Parse the command-line parameters and store the relevant information
-     * in a shared pointer of a structure.
-     *
-     * @param int number of command-line arguments
-     * @param char** the command-line arguments
-     * @param args_t a reference to the structure of the command-line
-     *        arguments
-     * @return either success or failure. In case of a failure then the help
-     *        message was requested.
-     */
-    int parse(int, char **, args_t &);
+  /** @fn parse(int argc, char *argv[], args_t);
+   * Parse the command-line parameters and store the relevant information
+   * in a shared pointer of a structure.
+   *
+   * @param int number of command-line arguments
+   * @param char** the command-line arguments
+   * @param args_t a reference to the structure of the command-line
+   *        arguments
+   * @return either success or failure. In case of a failure then the help
+   *        message was requested.
+   */
+  int parse(int, char **, args_t &);
 
-private:
+ private:
 
-    /**
-     * A scoped pointer to the description of the command-line arguments.
-     */
-    boost::scoped_ptr<po::options_description> m_opt_desc;
+  /**
+   * A scoped pointer to the description of the command-line arguments.
+   */
+  boost::scoped_ptr<po::options_description> m_opt_desc;
 };
 
 
-    }
+}
 }
 
 

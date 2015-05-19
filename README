@@ -2,8 +2,9 @@ README
 
 This project implements Lempel-Ziv parsing and encoding of input
 sequences. This can be used to compress a sequence using a dictionary
-that is created online. The Lempel-Ziv type of algorithms underly most
-of the compression algorithms.
+that is created online using a parsing algorithm due to Nisenson et
+al. [1]. The parsing algorithm has two parameters that govern the
+shifting operations.
 
 
 EXECUTION
@@ -21,8 +22,11 @@ I/O Configuration:
                             for parsing.
 
 LZ Configuration:
-  --twopass-parse arg (=0)  parse the sequence twice with offset of 1
-  --twopass-encode arg (=0) encode the sequence twice with offset of 1
+  --input-shifting arg (=0) Maximum offset for input shifting.
+  --back-shifting arg (=0)  Maximum offset for back shifting.
+  --twopass-encode arg (=0) encode the sequence twice with offset of 1.
+  --prune arg (=0)          Prune the dictionary.
+  --encode arg (=0)         Encode the sequences.
 
 The sequence file expects three columns separated by commas. The first
 column gives the sequence identifier; the second column is a running
@@ -37,7 +41,13 @@ column is the string of the sequence. E.g.,
 
 is the alphabet given as a sequence.
 
-The LZ configuration provides means to parse and encode the input
-sequence twice with an offset of 1 respectively. This can be used to
-enrich the dictionary on the one hand side and the encoding on the
-other.
+The shifting operations can be used to enrich the dictionary and the
+encoding.
+
+
+BIBLIOGRAPHY
+
+[1] Nisenson, M., Yariv, I., El-Yaniv, R., & Meir, R. (2003). Towards
+ behaviometric security systems: Learning to identify a typist. In The
+ 7th European Conference on Principles and Practice of Knowledge
+ Discovery in Databases.

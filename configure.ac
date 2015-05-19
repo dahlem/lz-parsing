@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Dominik Dahlem <Dominik.Dahlem@gmail.com>
+# Copyright (C) 2013, 2015 Dominik Dahlem <Dominik.Dahlem@gmail.com>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -10,7 +10,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT([Lempel-Ziv Parsing],
-        [1.0],
+        [1.1],
         [Dominik Dahlem Dominik.Dahlem@gmail.com], 
         [lz])
 
@@ -30,6 +30,8 @@ define([AC_LIBTOOL_LANG_CXX_CONFIG], [:])dnl
 define([AC_LIBTOOL_LANG_F77_CONFIG], [:])dnl
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
+
+AX_CXX_COMPILE_STDCXX_11[[ext],[mandatory]]
 
 # Checks for header files.
 # Checks for typedefs, structures, and compiler characteristics.

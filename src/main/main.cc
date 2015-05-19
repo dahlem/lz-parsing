@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Dominik Dahlem <Dominik.Dahlem@gmail.com>
+// Copyright (C) 2013, 2015 Dominik Dahlem <Dominik.Dahlem@gmail.com>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,56 +56,55 @@ typedef std::map<boost::uint32_t, boost::uint32_t> TRANSLATE;
  */
 void prune(DICT &h)
 {
-    for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end;)
-    {
-        if ((it->second).second == 0) {
-            h.erase(it++);
-        } else {
-            ++it;
-        }
+  for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end;)
+  {
+    if ((it->second).second == 0) {
+      h.erase(it++);
+    } else {
+      ++it;
     }
+  }
 
-    // re-assign the reference
-    boost::uint32_t idx = 0;
-    for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end; ++it)
-    {
-        (it->second).first = idx;
-        (it->second).second = 0;
-        idx++;
-    }
+  // re-assign the reference
+  boost::uint32_t idx = 0;
+  for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end; ++it)
+  {
+    (it->second).first = idx;
+    idx++;
+  }
 }
 
 void prune(DICT &h, TRANSLATE &t)
 {
-    for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end;)
-    {
-        if ((it->second).second == 0) {
-            h.erase(it++);
-        } else {
-            ++it;
-        }
+  for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end;)
+  {
+    if ((it->second).second == 0) {
+      h.erase(it++);
+    } else {
+      ++it;
     }
+  }
 
-    // re-assign the reference
-    t.clear();
-    boost::uint32_t idx = 0;
-    for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end; ++it)
-    {
-        t[(it->second).first] = idx; // map the old value to a new value
-        (it->second).first = idx;
-        idx++;
-    }
+  // re-assign the reference
+  t.clear();
+  boost::uint32_t idx = 0;
+  for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end; ++it)
+  {
+    t[(it->second).first] = idx; // map the old value to a new value
+    (it->second).first = idx;
+    idx++;
+  }
 }
 
 void translate(ENCODINGS &e, TRANSLATE &t)
 {
-    ENCODINGS::iterator es_it = e.begin(), es_end = e.end();
-    for (; es_it != es_end; ++es_it) {
-        ENCODING::iterator e_it = (es_it->second).begin(), e_end = (es_it->second).end();
-        for (; e_it != e_end; ++e_it) {
-            *e_it = t[*e_it];
-        }
+  ENCODINGS::iterator es_it = e.begin(), es_end = e.end();
+  for (; es_it != es_end; ++es_it) {
+    ENCODING::iterator e_it = (es_it->second).begin(), e_end = (es_it->second).end();
+    for (; e_it != e_end; ++e_it) {
+      *e_it = t[*e_it];
     }
+  }
 }
 
 
@@ -114,17 +113,17 @@ void translate(ENCODINGS &e, TRANSLATE &t)
  */
 void add(DICT &h, std::string e)
 {
-    DICT::iterator it;
-    boost::uint32_t index = 0;
+  DICT::iterator it;
+  boost::uint32_t index = 0;
 
-    it = h.find(e);
+  it = h.find(e);
 
-    if (it == h.end()) {
-        // new group
-        index = h.size()+1;
-        VAL val = VAL(index, 0);
-        h.insert(std::pair<std::string, VAL>(e, val));
-    }
+  if (it == h.end()) {
+    // new group
+    index = h.size()+1;
+    VAL val = VAL(index, 0);
+    h.insert(std::pair<std::string, VAL>(e, val));
+  }
 }
 
 /**
@@ -132,244 +131,270 @@ void add(DICT &h, std::string e)
  */
 boost::uint32_t encode(DICT &h, std::string e)
 {
-    DICT::iterator it;
-    boost::uint32_t index = 0;
+  DICT::iterator it;
+  boost::uint32_t index = 0;
 
-    it = h.find(e);
+  it = h.find(e);
 
-    if (it != h.end()) {
-        // group exists already
-        index = (it->second).first;
-        (it->second).second++;
-    } else {
-        // new group
-        index = h.size()+1;
-        VAL val = VAL(index, 1);
-        h.insert(std::pair<std::string, VAL>(e, val));
-    }
+  if (it != h.end()) {
+    // group exists already
+    index = (it->second).first;
+    (it->second).second++;
+  } else {
+    // new group
+    index = h.size()+1;
+    VAL val = VAL(index, 1);
+    h.insert(std::pair<std::string, VAL>(e, val));
+  }
 
-    return index;
+  return index;
 }
 
-void lempelZivDictionary_parsing(std::vector<std::string> &sequence, DICT &shortSeqs, boost::uint32_t i)
+void lempelZivDictionary_parsing(std::vector<std::string> &sequence, DICT &shortSeqs, boost::uint32_t i, boost::uint16_t m)
 {
-    DICT::iterator it_hist = shortSeqs.end();
-    std::vector<std::string>::iterator it_cur = sequence.begin();
-    std::advance(it_cur, i);
+  DICT::iterator it_hist = shortSeqs.end();
+  std::vector<std::string>::iterator it_cur = sequence.begin();
+  std::advance(it_cur, i);
 
-    // add alphabet
-    for (boost::uint32_t k = i; k < sequence.size(); ++k) {
-        add(shortSeqs, sequence[k]);
+  // add alphabet
+  for (boost::uint32_t k = i; k < sequence.size(); ++k) {
+    add(shortSeqs, sequence[k]);
+  }
+
+  std::vector<std::string> w, wk;
+  for (; it_cur != sequence.end(); it_cur++) {
+    std::string k = *it_cur;
+
+    wk.clear();
+    wk.insert(wk.end(), w.begin(), w.end());
+    wk.push_back(k);
+
+    std::ostringstream wkStr, wStr;
+    std::copy(wk.begin(), wk.end()-1, std::ostream_iterator<std::string>(wkStr, "<>"));
+    wkStr << wk.back();
+
+    if (w.size()) {
+      std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
+      wStr << w.back();
     }
 
-    std::vector<std::string> w, wk;
-    for (; it_cur != sequence.end(); it_cur++) {
-        std::string k = *it_cur;
+    if (wk.size() >= 4) {
+      encode(shortSeqs, wStr.str());
+      w.clear();
+      w.push_back(k);
+    } else {
+      it_hist = shortSeqs.find(wkStr.str());
 
-        wk.clear();
-        wk.insert(wk.end(), w.begin(), w.end());
-        wk.push_back(k);
+      if (it_hist != shortSeqs.end()) {
+        w = wk;
+      } else {
+        add(shortSeqs, wkStr.str());
+        encode(shortSeqs, wStr.str());
 
-        std::ostringstream wkStr, wStr;
-        std::copy(wk.begin(), wk.end()-1, std::ostream_iterator<std::string>(wkStr, "<>"));
-        wkStr << wk.back();
-
-        if (w.size()) {
-            std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-            wStr << w.back();
+        if (m > 0) {
+          boost::int16_t pos = it_cur - sequence.begin();
+          boost::int16_t maxShift = m + 1;
+          boost::int16_t backShift = std::min(pos, maxShift);
+          std::advance(it_cur, -backShift);
         }
 
-        if (wk.size() >= 4) {
-            encode(shortSeqs, wStr.str());
-            w.clear();
-            w.push_back(k);
-        } else {
-            it_hist = shortSeqs.find(wkStr.str());
-
-            if (it_hist != shortSeqs.end()) {
-                w = wk;
-            } else {
-                add(shortSeqs, wkStr.str());
-                encode(shortSeqs, wStr.str());
-                w.clear();
-                w.push_back(k);
-            }
-        }
+        w.clear();
+        w.push_back(k);
+      }
     }
-    if (w.size() == 1) {
-        std::ostringstream wStr;
-        wStr << w.back();
-        encode(shortSeqs, wStr.str());
-    } else if (w.size() > 1) {
-        std::ostringstream wStr;
-        std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-        wStr << w.back();
-        encode(shortSeqs, wStr.str());
-    }
+  }
+  if (w.size() == 1) {
+    std::ostringstream wStr;
+    wStr << w.back();
+    encode(shortSeqs, wStr.str());
+  } else if (w.size() > 1) {
+    std::ostringstream wStr;
+    std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
+    wStr << w.back();
+    encode(shortSeqs, wStr.str());
+  }
 }
 
 void lempelZivDictionary_encoding(std::vector<std::string> &sequence, DICT &shortSeqs, std::vector<boost::uint32_t> &encoding, boost::uint32_t i)
 {
-    DICT::iterator it_hist = shortSeqs.end();
-    boost::uint32_t code = 0;
-    std::vector<std::string>::iterator it_cur = sequence.begin();
-    std::advance(it_cur, i);
+  DICT::iterator it_hist = shortSeqs.end();
+  boost::uint32_t code = 0;
+  std::vector<std::string>::iterator it_cur = sequence.begin();
+  std::advance(it_cur, i);
 
-    std::vector<std::string> w, wk;
-    for (; it_cur != sequence.end(); it_cur++) {
-        std::string k = *it_cur;
+  std::vector<std::string> w, wk;
+  for (; it_cur != sequence.end(); it_cur++) {
+    std::string k = *it_cur;
 
-        wk.clear();
-        wk.insert(wk.end(), w.begin(), w.end());
-        wk.push_back(k);
+    wk.clear();
+    wk.insert(wk.end(), w.begin(), w.end());
+    wk.push_back(k);
 
-        std::ostringstream wkStr, wStr;
-        std::copy(wk.begin(), wk.end()-1, std::ostream_iterator<std::string>(wkStr, "<>"));
-        wkStr << wk.back();
+    std::ostringstream wkStr, wStr;
+    std::copy(wk.begin(), wk.end()-1, std::ostream_iterator<std::string>(wkStr, "<>"));
+    wkStr << wk.back();
 
-        if (w.size()) {
-            std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-            wStr << w.back();
-        }
-
-        if (wk.size() >= 4) {
-            code = encode(shortSeqs, wStr.str());
-            encoding.push_back(code);
-            w.clear();
-            w.push_back(k);
-        } else {
-            it_hist = shortSeqs.find(wkStr.str());
-
-            if (it_hist != shortSeqs.end()) {
-                w = wk;
-            } else {
-                code = encode(shortSeqs, wStr.str());
-                encoding.push_back(code);
-                w.clear();
-                w.push_back(k);
-            }
-        }
+    if (w.size()) {
+      std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
+      wStr << w.back();
     }
-    if (w.size() == 1) {
-        std::ostringstream wStr;
-        wStr << w.back();
+
+    if (wk.size() >= 4) {
+      code = encode(shortSeqs, wStr.str());
+      encoding.push_back(code);
+      w.clear();
+      w.push_back(k);
+    } else {
+      it_hist = shortSeqs.find(wkStr.str());
+
+      if (it_hist != shortSeqs.end()) {
+        w = wk;
+      } else {
         code = encode(shortSeqs, wStr.str());
         encoding.push_back(code);
-    } else if (w.size() > 1) {
-        std::ostringstream wStr;
-        std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-        wStr << w.back();
-        code = encode(shortSeqs, wStr.str());
-        encoding.push_back(code);
+        w.clear();
+        w.push_back(k);
+      }
     }
+  }
+  if (w.size() == 1) {
+    std::ostringstream wStr;
+    wStr << w.back();
+    code = encode(shortSeqs, wStr.str());
+    encoding.push_back(code);
+  } else if (w.size() > 1) {
+    std::ostringstream wStr;
+    std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
+    wStr << w.back();
+    code = encode(shortSeqs, wStr.str());
+    encoding.push_back(code);
+  }
 }
 
 int main(int argc, char *argv[])
 {
-    cmain::args_t args;
-    cmain::CL cl;
+  cmain::args_t args;
+  cmain::CL cl;
 
-    if (cl.parse(argc, argv, args)) {
-        return EXIT_SUCCESS;
-    }
+  if (cl.parse(argc, argv, args)) {
+    return EXIT_SUCCESS;
+  }
 
-    std::ifstream sequenceFile;
-    sequenceFile.open(args.sequence.c_str());
-    if (!sequenceFile.is_open()) {
-        std::cerr << "Could not open file: " << args.sequence << std::endl;
+  std::ifstream sequenceFile;
+  sequenceFile.open(args.sequence.c_str());
+  if (!sequenceFile.is_open()) {
+    std::cerr << "Could not open file: " << args.sequence << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  SEQUENCE sequence;
+  SEQUENCES sequences;
+  boost::uint32_t curSequenceID = std::numeric_limits<boost::uint32_t>::max();
+  std::string line;
+  DICT dict;
+
+  // parsing
+  std::cout << "Parsing..." << std::endl;
+  while (!sequenceFile.eof()) {
+    std::getline(sequenceFile, line);
+    boost::trim(line);
+
+    if (line != "") {
+      std::vector<std::string> splitVec;
+      boost::split(splitVec, line, boost::is_any_of(","), boost::token_compress_on);
+
+      if (splitVec.size() != 3) {
+        std::cerr << "Expect three elements, but got: " << line << std::endl;
         return EXIT_FAILURE;
-    }
+      } else {
+        boost::uint32_t sequenceID = boost::lexical_cast<boost::uint32_t>(splitVec[0]);
 
-    SEQUENCE sequence;
-    SEQUENCES sequences;
-    boost::uint32_t curSequenceID = std::numeric_limits<boost::uint32_t>::max();
-    std::string line;
-    DICT dict;
-
-    // parsing
-    std::cout << "Parsing..." << std::endl;
-    while (!sequenceFile.eof()) {
-        std::getline(sequenceFile, line);
-        boost::trim(line);
-
-        if (line != "") {
-            std::vector<std::string> splitVec;
-            boost::split(splitVec, line, boost::is_any_of(","), boost::token_compress_on);
-
-            if (splitVec.size() != 3) {
-                std::cerr << "Expect three elements, but got: " << line << std::endl;
-                return EXIT_FAILURE;
-            } else {
-                boost::uint32_t sequenceID = boost::lexical_cast<boost::uint32_t>(splitVec[0]);
-
-                if (sequenceID != curSequenceID) {
-                    // parse lz sequence
-                    SEQUENCE hist(sequence);
-                    sequences.push_back(std::pair<boost::uint32_t, SEQUENCE> (curSequenceID, hist));
-                    lempelZivDictionary_parsing(sequence, dict, 0);
-                    if (sequence.size() > 0) {
-                        lempelZivDictionary_parsing(sequence, dict, 1);
-                    }
-                    sequence.clear();
-                    sequence.push_back(splitVec[2]);
-                    curSequenceID = sequenceID;
-                } else {
-                    sequence.push_back(splitVec[2]);
-                }
+        if (sequenceID != curSequenceID) {
+          // parse lz sequence
+          SEQUENCE hist(sequence);
+          sequences.push_back(std::pair<boost::uint32_t, SEQUENCE> (curSequenceID, hist));
+          lempelZivDictionary_parsing(sequence, dict, 0, args.back_shifting);
+          if (sequence.size() > 0 && args.input_shifting > 0) {
+            boost::uint16_t shift = args.input_shifting;
+            if (args.input_shifting >= (sequence.size()-1)) {
+              shift = sequence.size()-1;
             }
+            for (boost::uint16_t i = 1; i <= shift; ++i) {
+              lempelZivDictionary_parsing(sequence, dict, i, args.back_shifting);
+            }
+          }
+          sequence.clear();
+          sequence.push_back(splitVec[2]);
+          curSequenceID = sequenceID;
+        } else {
+          sequence.push_back(splitVec[2]);
         }
+      }
     }
-    sequenceFile.close();
+  }
+  sequenceFile.close();
 
-    // parse the last sequence
-    SEQUENCE hist(sequence);
-    sequences.push_back(std::pair<boost::uint32_t, SEQUENCE> (curSequenceID, hist));
-    lempelZivDictionary_parsing(sequence, dict, 0);
-    if ((sequence.size() > 0) && (args.twopass_parse)) {
-        lempelZivDictionary_parsing(sequence, dict, 1);
+  // parse the last sequence
+  SEQUENCE hist(sequence);
+  sequences.push_back(std::pair<boost::uint32_t, SEQUENCE> (curSequenceID, hist));
+  lempelZivDictionary_parsing(sequence, dict, 0, args.back_shifting);
+  if (sequence.size() > 0 && args.input_shifting > 0) {
+    boost::uint16_t shift = args.input_shifting;
+    if (args.input_shifting >= (sequence.size()-1)) {
+      shift = sequence.size()-1;
     }
+    for (boost::uint16_t i = 1; i <= shift; ++i) {
+      lempelZivDictionary_parsing(sequence, dict, i, args.back_shifting);
+    }
+  }
 
-    // prune the dictionary
+  // prune the dictionary
+  if (args.prune) {
     std::cout << "Pruning..." << std::endl;
     prune(dict);
+  }
 
-    // encoding
+  // encoding
+  if (args.encode) {
     std::cout << "Encoding " << sequences.size() << " sequences..." << std::endl;
     SEQUENCES::iterator p_it = sequences.begin(), p_end = sequences.end();
     ENCODINGS encodings;
     for (; p_it != p_end; ++p_it) {
-        if ((p_it->second).size() >= args.min) {
-            // parse lz sequence
-            ENCODING encoding;
-            lempelZivDictionary_encoding(p_it->second, dict, encoding, 0);
-            if (((p_it->second).size() > 0) && (args.twopass_encode)) {
-                lempelZivDictionary_encoding(p_it->second, dict, encoding, 1);
-            }
-            encodings.push_back(std::pair<boost::uint32_t, ENCODING> (p_it->first, encoding));
+      if ((p_it->second).size() >= args.min) {
+        // parse lz sequence
+        ENCODING encoding;
+        lempelZivDictionary_encoding(p_it->second, dict, encoding, 0);
+        if (((p_it->second).size() > 0) && (args.twopass_encode)) {
+          lempelZivDictionary_encoding(p_it->second, dict, encoding, 1);
         }
+        encodings.push_back(std::pair<boost::uint32_t, ENCODING> (p_it->first, encoding));
+      }
     }
 
-    TRANSLATE t;
-    prune(dict, t);
-    translate(encodings, t);
+    if (args.prune) {
+      TRANSLATE t;
+      prune(dict, t);
+      translate(encodings, t);
+    }
 
     std::string filename = args.results_dir + "/encoding.dat";
     std::ofstream outEncoding(filename.c_str(), std::ios::out);
     ENCODINGS::iterator e_it = encodings.begin(), e_end = encodings.end();
     for (; e_it != e_end; ++e_it) {
-        outEncoding << e_it->first << ",";
-        std::copy((e_it->second).begin(), (e_it->second).end()-1, std::ostream_iterator<boost::uint32_t>(outEncoding, " "));
-        outEncoding << (e_it->second).back() << std::endl;
+      outEncoding << e_it->first << ",";
+      std::copy((e_it->second).begin(), (e_it->second).end()-1, std::ostream_iterator<boost::uint32_t>(outEncoding, " "));
+      outEncoding << (e_it->second).back() << std::endl;
     }
     outEncoding.close();
+  }
 
-    std::cout << "Serialising the dictionary..." << std::endl;
-    filename = args.results_dir + "/dictionary.dat";
-    std::ofstream outDict(filename.c_str(), std::ios::out);
-    BOOST_FOREACH(const DICT::value_type& entry, dict) {
-        outDict << entry.first << "," << (entry.second).first << "," << (entry.second).second << std::endl;
-    }
-    outDict.close();
+  std::cout << "Serialising the dictionary..." << std::endl;
+  std::string filename = args.results_dir + "/dictionary.dat";
+  std::ofstream outDict(filename.c_str(), std::ios::out);
+  BOOST_FOREACH(const DICT::value_type& entry, dict) {
+    outDict << entry.first << "," << (entry.second).first << "," << (entry.second).second << std::endl;
+  }
+  outDict.close();
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
