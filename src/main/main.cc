@@ -42,13 +42,10 @@
 #include "CL.hh"
 namespace cmain = lz::main;
 
-typedef std::vector<boost::uint32_t> ENCODING;
-typedef std::vector<std::pair<boost::uint32_t, ENCODING> > ENCODINGS;
 typedef std::vector<std::string> SEQUENCE;
 typedef std::vector<std::pair<boost::uint32_t, SEQUENCE> > SEQUENCES;
 typedef std::pair<boost::uint32_t, boost::uint32_t> VAL;
 typedef std::map<std::string, VAL > DICT;
-typedef std::map<boost::uint32_t, boost::uint32_t> TRANSLATE;
 
 
 /**
@@ -74,40 +71,6 @@ void prune(DICT &h)
   }
 }
 
-void prune(DICT &h, TRANSLATE &t)
-{
-  for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end;)
-  {
-    if ((it->second).second == 0) {
-      h.erase(it++);
-    } else {
-      ++it;
-    }
-  }
-
-  // re-assign the reference
-  t.clear();
-  boost::uint32_t idx = 0;
-  for(DICT::iterator it = h.begin(), it_end = h.end(); it != it_end; ++it)
-  {
-    t[(it->second).first] = idx; // map the old value to a new value
-    (it->second).first = idx;
-    idx++;
-  }
-}
-
-void translate(ENCODINGS &e, TRANSLATE &t)
-{
-  ENCODINGS::iterator es_it = e.begin(), es_end = e.end();
-  for (; es_it != es_end; ++es_it) {
-    ENCODING::iterator e_it = (es_it->second).begin(), e_end = (es_it->second).end();
-    for (; e_it != e_end; ++e_it) {
-      *e_it = t[*e_it];
-    }
-  }
-}
-
-
 /**
  * This function is just used to add a string into the dictionary without encoding
  */
@@ -126,148 +89,36 @@ void add(DICT &h, std::string e)
   }
 }
 
-/**
- * This function adds a string and returns the index for encoding.
- */
-boost::uint32_t encode(DICT &h, std::string e)
-{
-  DICT::iterator it;
-  boost::uint32_t index = 0;
-
-  it = h.find(e);
-
-  if (it != h.end()) {
-    // group exists already
-    index = (it->second).first;
-    (it->second).second++;
-  } else {
-    // new group
-    index = h.size()+1;
-    VAL val = VAL(index, 1);
-    h.insert(std::pair<std::string, VAL>(e, val));
-  }
-
-  return index;
-}
-
-void lempelZivDictionary_parsing(std::vector<std::string> &sequence, DICT &shortSeqs, boost::uint32_t i, boost::uint16_t m)
+void lempelZivDictionary_parsing(SEQUENCE &sequence, DICT &shortSeqs, boost::uint32_t i, boost::uint16_t m)
 {
   DICT::iterator it_hist = shortSeqs.end();
-  std::vector<std::string>::iterator it_cur = sequence.begin();
+  SEQUENCE::iterator it_cur = sequence.begin();
   std::advance(it_cur, i);
 
-  // add alphabet
-  for (boost::uint32_t k = i; k < sequence.size(); ++k) {
-    add(shortSeqs, sequence[k]);
-  }
-
-  std::vector<std::string> w, wk;
+  SEQUENCE phrase;
   for (; it_cur != sequence.end(); it_cur++) {
     std::string k = *it_cur;
+    phrase.push_back(k);
 
-    wk.clear();
-    wk.insert(wk.end(), w.begin(), w.end());
-    wk.push_back(k);
+    std::ostringstream phraseStr;
+    std::copy(phrase.begin(), phrase.end()-1, std::ostream_iterator<SEQUENCE::value_type>(phraseStr, "<>"));
+    phraseStr << phrase.back();
 
-    std::ostringstream wkStr, wStr;
-    std::copy(wk.begin(), wk.end()-1, std::ostream_iterator<std::string>(wkStr, "<>"));
-    wkStr << wk.back();
+    // check whether current word is in dictionary
+    // 1. if yes, continue appending
+    // 2. if no, add and reset word
+    if (shortSeqs.find(phraseStr.str()) == it_hist) {
+      add(shortSeqs, phraseStr.str());
 
-    if (w.size()) {
-      std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-      wStr << w.back();
-    }
-
-    if (wk.size() >= 4) {
-      encode(shortSeqs, wStr.str());
-      w.clear();
-      w.push_back(k);
-    } else {
-      it_hist = shortSeqs.find(wkStr.str());
-
-      if (it_hist != shortSeqs.end()) {
-        w = wk;
-      } else {
-        add(shortSeqs, wkStr.str());
-        encode(shortSeqs, wStr.str());
-
-        if (m > 0) {
-          boost::int16_t pos = it_cur - sequence.begin();
-          boost::int16_t maxShift = m + 1;
-          boost::int16_t backShift = std::min(pos, maxShift);
-          std::advance(it_cur, -backShift);
-        }
-
-        w.clear();
-        w.push_back(k);
+      if (m > 0) {
+        boost::int16_t pos = it_cur - sequence.begin();
+        boost::int16_t maxShift = m + 1;
+        boost::int16_t backShift = std::min(pos, maxShift);
+        std::advance(it_cur, -backShift);
       }
+
+      phrase.clear();
     }
-  }
-  if (w.size() == 1) {
-    std::ostringstream wStr;
-    wStr << w.back();
-    encode(shortSeqs, wStr.str());
-  } else if (w.size() > 1) {
-    std::ostringstream wStr;
-    std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-    wStr << w.back();
-    encode(shortSeqs, wStr.str());
-  }
-}
-
-void lempelZivDictionary_encoding(std::vector<std::string> &sequence, DICT &shortSeqs, std::vector<boost::uint32_t> &encoding, boost::uint32_t i)
-{
-  DICT::iterator it_hist = shortSeqs.end();
-  boost::uint32_t code = 0;
-  std::vector<std::string>::iterator it_cur = sequence.begin();
-  std::advance(it_cur, i);
-
-  std::vector<std::string> w, wk;
-  for (; it_cur != sequence.end(); it_cur++) {
-    std::string k = *it_cur;
-
-    wk.clear();
-    wk.insert(wk.end(), w.begin(), w.end());
-    wk.push_back(k);
-
-    std::ostringstream wkStr, wStr;
-    std::copy(wk.begin(), wk.end()-1, std::ostream_iterator<std::string>(wkStr, "<>"));
-    wkStr << wk.back();
-
-    if (w.size()) {
-      std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-      wStr << w.back();
-    }
-
-    if (wk.size() >= 4) {
-      code = encode(shortSeqs, wStr.str());
-      encoding.push_back(code);
-      w.clear();
-      w.push_back(k);
-    } else {
-      it_hist = shortSeqs.find(wkStr.str());
-
-      if (it_hist != shortSeqs.end()) {
-        w = wk;
-      } else {
-        code = encode(shortSeqs, wStr.str());
-        encoding.push_back(code);
-        w.clear();
-        w.push_back(k);
-      }
-    }
-  }
-  if (w.size() == 1) {
-    std::ostringstream wStr;
-    wStr << w.back();
-    code = encode(shortSeqs, wStr.str());
-    encoding.push_back(code);
-  } else if (w.size() > 1) {
-    std::ostringstream wStr;
-    std::copy(w.begin(), w.end()-1, std::ostream_iterator<std::string>(wStr, "<>"));
-    wStr << w.back();
-    code = encode(shortSeqs, wStr.str());
-    encoding.push_back(code);
   }
 }
 
@@ -297,7 +148,6 @@ int main(int argc, char *argv[])
   std::cout << "Parsing..." << std::endl;
   while (!sequenceFile.eof()) {
     std::getline(sequenceFile, line);
-    boost::trim(line);
 
     if (line != "") {
       std::vector<std::string> splitVec;
@@ -352,40 +202,6 @@ int main(int argc, char *argv[])
   if (args.prune) {
     std::cout << "Pruning..." << std::endl;
     prune(dict);
-  }
-
-  // encoding
-  if (args.encode) {
-    std::cout << "Encoding " << sequences.size() << " sequences..." << std::endl;
-    SEQUENCES::iterator p_it = sequences.begin(), p_end = sequences.end();
-    ENCODINGS encodings;
-    for (; p_it != p_end; ++p_it) {
-      if ((p_it->second).size() >= args.min) {
-        // parse lz sequence
-        ENCODING encoding;
-        lempelZivDictionary_encoding(p_it->second, dict, encoding, 0);
-        if (((p_it->second).size() > 0) && (args.twopass_encode)) {
-          lempelZivDictionary_encoding(p_it->second, dict, encoding, 1);
-        }
-        encodings.push_back(std::pair<boost::uint32_t, ENCODING> (p_it->first, encoding));
-      }
-    }
-
-    if (args.prune) {
-      TRANSLATE t;
-      prune(dict, t);
-      translate(encodings, t);
-    }
-
-    std::string filename = args.results_dir + "/encoding.dat";
-    std::ofstream outEncoding(filename.c_str(), std::ios::out);
-    ENCODINGS::iterator e_it = encodings.begin(), e_end = encodings.end();
-    for (; e_it != e_end; ++e_it) {
-      outEncoding << e_it->first << ",";
-      std::copy((e_it->second).begin(), (e_it->second).end()-1, std::ostream_iterator<boost::uint32_t>(outEncoding, " "));
-      outEncoding << (e_it->second).back() << std::endl;
-    }
-    outEncoding.close();
   }
 
   std::cout << "Serialising the dictionary..." << std::endl;

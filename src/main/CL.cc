@@ -66,9 +66,7 @@ CL::CL()
   opt_lz.add_options()
       (INPUT_SHIFTING.c_str(), po::value <boost::uint16_t>()->default_value(0), "Maximum offset for input shifting.")
       (BACK_SHIFTING.c_str(), po::value <boost::uint16_t>()->default_value(0), "Maximum offset for back shifting.")
-      (TWOPASS_ENCODE.c_str(), po::value <bool>()->default_value(0), "encode the sequence twice with offset of 1.")
       (PRUNE.c_str(), po::value <bool>()->default_value(0), "Prune the dictionary.")
-      (ENCODE.c_str(), po::value <bool>()->default_value(0), "Encode the sequences.")
       ;
 
   m_opt_desc->add(opt_general);
@@ -115,16 +113,8 @@ int CL::parse(int argc, char *argv[], args_t &p_args)
     p_args.back_shifting = vm[BACK_SHIFTING.c_str()].as <boost::uint16_t>();
   }
 
-  if (vm.count(TWOPASS_ENCODE.c_str())) {
-    p_args.twopass_encode = vm[TWOPASS_ENCODE.c_str()].as <bool>();
-  }
-
   if (vm.count(PRUNE.c_str())) {
     p_args.prune = vm[PRUNE.c_str()].as <bool>();
-  }
-
-  if (vm.count(ENCODE.c_str())) {
-    p_args.encode = vm[ENCODE.c_str()].as <bool>();
   }
 
   std::cout << argv[0] << " " << PACKAGE_VERSION << std::endl;

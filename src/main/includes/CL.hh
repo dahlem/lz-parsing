@@ -51,9 +51,7 @@ const std::string MIN = "min";
 
 const std::string INPUT_SHIFTING = "input-shifting";
 const std::string BACK_SHIFTING = "back-shifting";
-const std::string TWOPASS_ENCODE = "twopass-encode";
 const std::string PRUNE = "prune";
-const std::string ENCODE = "encode";
 
 
 /** @struct
@@ -65,18 +63,15 @@ struct args_t {
   boost::uint16_t min;
   boost::uint16_t input_shifting;
   boost::uint16_t back_shifting;
-  bool twopass_encode;
   bool prune;
-  bool encode;
 
   args_t(args_t const &args)
       : sequence(args.sequence), results_dir(args.results_dir), min(args.min), input_shifting(args.input_shifting),
-        back_shifting(args.back_shifting), twopass_encode(args.twopass_encode), prune(args.prune),
-        encode(args.encode)
+        back_shifting(args.back_shifting), prune(args.prune)
   {}
 
   args_t()
-      : sequence(""), results_dir(""), min(1), input_shifting(0), back_shifting(0), twopass_encode(0), prune(0), encode(0)
+      : sequence(""), results_dir(""), min(1), input_shifting(0), back_shifting(0), prune(0)
   {}
 
   friend std::ostream& operator <<(std::ostream &p_os, const args_t &p_args)
@@ -87,9 +82,7 @@ struct args_t {
          << "Minimum elements: " << p_args.min << std::endl
          << "Input shifting:   " << p_args.input_shifting << std::endl
          << "Back shifting:    " << p_args.back_shifting << std::endl
-         << "encode twice:     " << p_args.twopass_encode << std::endl
          << "Prune:            " << p_args.prune << std::endl
-         << "Encode:           " << p_args.encode << std::endl
          << std::endl;
 
     return p_os;
